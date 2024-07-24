@@ -1,0 +1,48 @@
+- name: configuredb
+  hosts: db
+  become: yes
+  vars:
+    login_host: db.jasdevops.cloud
+
+  vars_prompt:
+    - name: mysql root password
+      prompt: enter root password
+      private: no
+
+  tasks:
+    - name: Install mysql server
+      ansible.builtin.dnf:
+        - name: mysql-server
+          state: latest
+
+    - name: start and enable service
+      ansible.builtin.service:
+        - name: mysqld
+          state: started
+          enabled: yes
+
+    - name: python dependencie
+      ansible.builtin.pip:
+        - name:
+          - pymysql
+          - cryptography
+          executable: pip3.9
+
+# check root password
+
+    - name: check db connection
+      community.mysql.mysql_info:
+        loginhost: "{{ login_host }}"
+        login_user: root
+        login_password: "{{ mysql root password }}"
+        filter: version
+      ignore_errors: yes
+      register: mysql_connection_output
+
+    - name: print output
+      ansible.builtin.debug:
+        msg: "output {{ mysql_connection_output }}"
+    
+    - name: setup root password
+      ansible.builtin.command: "mysql_secure_installation --set-root-pass {{ mysql root password }}"
+      when: mysql_connection_output.failed is true
