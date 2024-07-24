@@ -46,4 +46,4 @@
         cmd: "mysql_secure_installation --set-root-pass {{ mysql_root_password }}"
       when: mysql_connection_output.failed
 
-      ###########
+      ###########done########
